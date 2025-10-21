@@ -6,7 +6,7 @@ from huggingface_hub import hf_hub_download
 
 # LangChain components
 from langchain_community.document_loaders import UnstructuredPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter  # <-- এই লাইনটি পরিবর্তন করা হয়েছে
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.llms import CTransformers
@@ -26,12 +26,13 @@ st.write("আপনার PDF আপলোড করুন (যাতে টে�
 @st.cache_resource
 def load_llm():
     """
-    লোকাল GGUF LLM (Phi-3-mini) লোড করে।
+    লোকাল GGUF LLM (Mistral-7B) লোড করে।
     """
     try:
-        st.write("Downloading local LLM (Phi-3-mini GGUF)... This may take a few minutes on first run.")
-        model_name_or_path = "microsoft/Phi-3-mini-4k-instruct-gguf"
-        model_file = "Phi-3-mini-4k-instruct-Q4_K_M.gguf"
+        st.write("Downloading local LLM (Mistral-7B-Instruct GGUF)... This may take a few minutes on first run.")
+        # Mistral-7B (গেটেড নয়)
+        model_name_or_path = "TheBloke/Mistral-7B-Instruct-v0.2-GGUF"
+        model_file = "mistral-7b-instruct-v0.2.Q4_K_M.gguf"
         
         model_path = hf_hub_download(
             repo_id=model_name_or_path,
@@ -43,7 +44,7 @@ def load_llm():
         # আপনার NVIDIA GPU থাকলে এটি বাড়াতে পারেন (যেমন: 20-50)।
         llm = CTransformers(
             model=model_path,
-            model_type='llama',
+            model_type='mistral',
             config={
                 'context_length': 4096,
                 'gpu_layers': 0, # লোকাল CPU-এর জন্য 0; GPU থাকলে বাড়ান
@@ -104,15 +105,13 @@ def load_embedding_model():
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     return embeddings
 
-# --- কাস্টম প্রম্পট টেমপ্লেট ---
-prompt_template = """<|system|>
-You are a helpful assistant. Answer the user's question based only on the following context:
+# --- কাস্টম প্রম্পট টেমপ্লেট (Mistral-এর জন্য) ---
+prompt_template = """<s>[INST] You are a helpful assistant. Answer the user's question based only on the following context:
+
 {context}
-<|end|>
-<|user|>
-{question}
-<|end|>
-<|assistant|>"""
+
+Question: {question} [/INST]
+"""
 
 PROMPT = PromptTemplate(
     template=prompt_template, input_variables=["context", "question"]
