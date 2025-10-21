@@ -1,7 +1,7 @@
 streamlit
 langchain
 langchain-community
-langchain-text-splitters
+langchain-text-splitters  <-- এই লাইনটি যোগ করতে হবে
 unstructured[pdf]
 pytesseract
 sentence-transformers
